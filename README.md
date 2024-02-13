@@ -14,7 +14,7 @@ The main function is `annotated_docs.json_schema.as_json_schema` which takes a f
 ## Installation
 Directly from this GitHub repo using pip:
 ```bash
-pip install "annotated_docs @ git+https://git@github.com/peterroelants/annotated-docs.git@v0.0.2"
+pip install "annotated_docs @ git+https://git@github.com/peterroelants/annotated-docs.git@v0.0.3"
 ```
 
 
