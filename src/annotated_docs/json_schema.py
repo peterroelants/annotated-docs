@@ -1,9 +1,11 @@
 import inspect
 from collections.abc import Callable
-from typing import Any, TypeVar
+from typing import Any, Final, TypeVar
 
 import pydantic
 import pydantic.json_schema
+
+RETURNS_KEY: Final[str] = "returns"
 
 T = TypeVar("T")
 
@@ -13,25 +15,32 @@ def doc(description) -> Any:
     return pydantic.Field(description=description)
 
 
-def as_json_schema(func: Callable) -> dict[str, Any]:
+def as_json_schema(func: Callable, include_returns: bool = False) -> dict[str, Any]:
     """
     Return a JSON schema for the given function.
     """
-    parameter_model = as_parameter_model(func)
-    parameters_schema = parameter_model.model_json_schema(
-        schema_generator=GenerateJsonSchemaNoTitle,
-        mode="validation",
-    )
-    description = None
+    parameters_schema = get_parameters_schema(func)
+    schema_dct: dict[str, Any] = {"name": func.__name__}
     if func.__doc__:
         description = inspect.cleandoc(func.__doc__).strip()
-    schema_dct = dict(name=func.__name__, parameters=parameters_schema)
-    if description:
-        schema_dct["description"] = description
+        if description:
+            schema_dct["description"] = description
+    schema_dct["parameters"] = parameters_schema
+    if include_returns:
+        schema_dct[RETURNS_KEY] = get_returns_schema(func)
     return schema_dct
 
 
-def as_parameter_model(func: Callable) -> pydantic.BaseModel:
+def get_parameters_schema(func: Callable) -> dict[str, Any]:
+    """Return a JSON schema for the parameters of the given function."""
+    parameter_model = get_parameter_model(func)
+    return parameter_model.model_json_schema(
+        schema_generator=GenerateJsonSchemaNoTitle,
+        mode="validation",
+    )
+
+
+def get_parameter_model(func: Callable) -> pydantic.BaseModel:
     """
     Return a Pydantic model for the parameters of the given function.
     """
@@ -49,13 +58,46 @@ def as_parameter_model(func: Callable) -> pydantic.BaseModel:
     return pydantic.create_model(_model_name, **field_definitions)  # type: ignore
 
 
+def get_returns_schema(func: Callable) -> dict[str, Any]:
+    returns_model = get_returns_model(func)
+    return_schema = returns_model.model_json_schema(
+        schema_generator=GenerateJsonSchemaNoTitle,
+        mode="validation",
+    )
+    properties = return_schema.pop("properties")
+    return_schema |= properties[RETURNS_KEY]
+    if "required" in return_schema:
+        del return_schema["required"]
+    if "type" in return_schema and return_schema["type"] == "object":
+        del return_schema["type"]
+    return return_schema
+
+
+def get_returns_model(func: Callable) -> pydantic.BaseModel:
+    """
+    Return a Pydantic model for the returns of the given function.
+    """
+    return_annotation = inspect.signature(func).return_annotation
+    if return_annotation == inspect.Signature.empty:
+        raise ValueError(
+            f"`{func.__name__}` has no return annotation, please provide an annotation to be able to generate the function specification."
+        )
+    field_definitions: dict[str, tuple[Any, Any]] = {
+        RETURNS_KEY: (return_annotation, pydantic.Field(...))
+    }
+    _model_name = ""  # Empty model name
+    return pydantic.create_model(_model_name, **field_definitions)  # type: ignore
+
+
 def call(func: Callable, parameters_json: dict) -> Any:
     """
     Call the given function with the given parameters.
     Parameters are converted from JSON to Python using the function's parameter model.
     """
-    parameter_model = as_parameter_model(func)
+    parameter_model = get_parameter_model(func)
+    # Validation: Convert JSON to Python using the parameter model
     parameters = parameter_model.model_validate(parameters_json)
+    # Call with first layer of parameters as keyword arguments
     return func(**dict(parameters))
 
 

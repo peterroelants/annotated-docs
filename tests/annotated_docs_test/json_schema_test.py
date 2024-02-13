@@ -1,22 +1,26 @@
 import typing
 from typing import Annotated as A
 
+import jsonschema
 from annotated_docs import as_json_schema
 from annotated_docs import doc as D
-from pydantic import BaseModel, Field
+from annotated_docs.json_schema import RETURNS_KEY
+from pydantic import BaseModel
 
 
 def test_as_json_schema_no_annotations() -> None:
     def test_func():
         pass
 
-    assert as_json_schema(test_func) == {
+    schema = as_json_schema(test_func)
+    assert schema == {
         "name": test_func.__name__,
         "parameters": {
             "properties": {},
             "type": "object",
         },
     }
+    jsonschema.Draft202012Validator.check_schema(schema)
 
 
 # Simple types #####################################################
@@ -25,7 +29,8 @@ def test_as_json_schema_simple() -> None:
         """Test function"""
         return "hello"
 
-    assert as_json_schema(test_func) == {
+    schema = as_json_schema(test_func)
+    assert schema == {
         "name": test_func.__name__,
         "description": "Test function",
         "parameters": {
@@ -38,6 +43,7 @@ def test_as_json_schema_simple() -> None:
             "type": "object",
         },
     }
+    jsonschema.Draft202012Validator.check_schema(schema)
 
 
 def test_as_json_schema_union() -> None:
@@ -47,7 +53,8 @@ def test_as_json_schema_union() -> None:
         """Test function"""
         return "hello"
 
-    assert as_json_schema(test_func) == {
+    schema = as_json_schema(test_func)
+    assert schema == {
         "name": test_func.__name__,
         "description": "Test function",
         "parameters": {
@@ -63,6 +70,7 @@ def test_as_json_schema_union() -> None:
             "type": "object",
         },
     }
+    jsonschema.Draft202012Validator.check_schema(schema)
 
 
 def test_as_json_schema_union_pipe() -> None:
@@ -72,7 +80,8 @@ def test_as_json_schema_union_pipe() -> None:
         """Test function"""
         return "hello"
 
-    assert as_json_schema(test_func) == {
+    schema = as_json_schema(test_func)
+    assert schema == {
         "name": test_func.__name__,
         "description": "Test function",
         "parameters": {
@@ -88,6 +97,7 @@ def test_as_json_schema_union_pipe() -> None:
             "type": "object",
         },
     }
+    jsonschema.Draft202012Validator.check_schema(schema)
 
 
 def test_as_json_schema_literal() -> None:
@@ -97,7 +107,8 @@ def test_as_json_schema_literal() -> None:
         """Test function"""
         return "hello"
 
-    assert as_json_schema(test_func) == {
+    schema = as_json_schema(test_func)
+    assert schema == {
         "name": test_func.__name__,
         "description": "Test function",
         "parameters": {
@@ -111,6 +122,7 @@ def test_as_json_schema_literal() -> None:
             "type": "object",
         },
     }
+    jsonschema.Draft202012Validator.check_schema(schema)
 
 
 def test_as_json_schema_default() -> None:
@@ -120,7 +132,8 @@ def test_as_json_schema_default() -> None:
         """Test function"""
         return "hello"
 
-    assert as_json_schema(test_func) == {
+    schema = as_json_schema(test_func)
+    assert schema == {
         "name": test_func.__name__,
         "description": "Test function",
         "parameters": {
@@ -130,6 +143,7 @@ def test_as_json_schema_default() -> None:
             "type": "object",
         },
     }
+    jsonschema.Draft202012Validator.check_schema(schema)
 
 
 def test_as_json_schema_maybe() -> None:
@@ -139,7 +153,8 @@ def test_as_json_schema_maybe() -> None:
         """Test function"""
         return "hello"
 
-    assert as_json_schema(test_func) == {
+    schema = as_json_schema(test_func)
+    assert schema == {
         "name": test_func.__name__,
         "description": "Test function",
         "parameters": {
@@ -155,6 +170,7 @@ def test_as_json_schema_maybe() -> None:
             "type": "object",
         },
     }
+    jsonschema.Draft202012Validator.check_schema(schema)
 
 
 def test_as_json_schema_optional() -> None:
@@ -164,7 +180,8 @@ def test_as_json_schema_optional() -> None:
         """Test function"""
         return "hello"
 
-    assert as_json_schema(test_func) == {
+    schema = as_json_schema(test_func)
+    assert schema == {
         "name": test_func.__name__,
         "description": "Test function",
         "parameters": {
@@ -180,6 +197,7 @@ def test_as_json_schema_optional() -> None:
             "type": "object",
         },
     }
+    jsonschema.Draft202012Validator.check_schema(schema)
 
 
 # Simple Types using Annotated #####################################
@@ -190,7 +208,8 @@ def test_as_json_schema_annotated() -> None:
         """Test function"""
         return "hello"
 
-    assert as_json_schema(test_func) == {
+    schema = as_json_schema(test_func)
+    assert schema == {
         "name": test_func.__name__,
         "description": "Test function",
         "parameters": {
@@ -204,6 +223,7 @@ def test_as_json_schema_annotated() -> None:
             "type": "object",
         },
     }
+    jsonschema.Draft202012Validator.check_schema(schema)
 
 
 def test_as_json_schema_annotated_literal() -> None:
@@ -213,7 +233,8 @@ def test_as_json_schema_annotated_literal() -> None:
         """Test function"""
         return "hello"
 
-    assert as_json_schema(test_func) == {
+    schema = as_json_schema(test_func)
+    assert schema == {
         "name": test_func.__name__,
         "description": "Test function",
         "parameters": {
@@ -228,6 +249,7 @@ def test_as_json_schema_annotated_literal() -> None:
             "type": "object",
         },
     }
+    jsonschema.Draft202012Validator.check_schema(schema)
 
 
 def test_as_json_schema_annotated_union() -> None:
@@ -237,7 +259,8 @@ def test_as_json_schema_annotated_union() -> None:
         """Test function"""
         return "hello"
 
-    assert as_json_schema(test_func) == {
+    schema = as_json_schema(test_func)
+    assert schema == {
         "name": test_func.__name__,
         "description": "Test function",
         "parameters": {
@@ -254,12 +277,13 @@ def test_as_json_schema_annotated_union() -> None:
             "type": "object",
         },
     }
+    jsonschema.Draft202012Validator.check_schema(schema)
 
 
 # Pydantic #########################################################
 def test_as_json_schema_pydantic() -> None:
     class TestModel(BaseModel):
-        b: A[int, Field(..., description="param b test")]
+        b: A[int, D("param b test")]
 
     def test_func(
         a: TestModel,
@@ -267,8 +291,10 @@ def test_as_json_schema_pydantic() -> None:
         """Test function"""
         return "hello"
 
-    assert as_json_schema(test_func) == {
+    schema = as_json_schema(test_func)
+    assert schema == {
         "name": test_func.__name__,
+        "description": "Test function",
         "parameters": {
             "$defs": {
                 "TestModel": {
@@ -286,5 +312,79 @@ def test_as_json_schema_pydantic() -> None:
             "required": ["a"],
             "type": "object",
         },
-        "description": "Test function",
     }
+    jsonschema.Draft202012Validator.check_schema(schema)
+
+
+# Test returns #####################################################
+def test_as_json_schema_include_returns_simple() -> None:
+    def test_func(a: int, b: float) -> str:
+        """Test function"""
+        return "hello"
+
+    # Check schema
+    schema = as_json_schema(test_func, include_returns=True)
+    assert schema == {
+        "name": test_func.__name__,
+        "description": "Test function",
+        "parameters": {
+            "properties": {
+                "a": {"type": "integer"},
+                "b": {"type": "number"},
+            },
+            "required": ["a", "b"],
+            "type": "object",
+        },
+        "returns": {"type": "string"},
+    }
+    jsonschema.Draft202012Validator.check_schema(schema)
+    # Call function and test output
+    result = test_func(a=1, b=2.0)
+    jsonschema.validate(instance=result, schema=schema[RETURNS_KEY])
+
+
+def test_as_json_schema_include_returns_pydantic() -> None:
+    class TestModel(BaseModel):
+        """Test model description"""
+
+        b: A[int, D("param b test")]
+
+    def test_func(
+        a: int,
+    ) -> A[TestModel, D("return test")]:
+        """Test function"""
+        return TestModel(b=a * 2)
+
+    schema = as_json_schema(test_func, include_returns=True)
+    assert schema == {
+        "name": test_func.__name__,
+        "description": "Test function",
+        "parameters": {
+            "properties": {
+                "a": {"type": "integer"},
+            },
+            "required": ["a"],
+            "type": "object",
+        },
+        "returns": {
+            "$defs": {
+                "TestModel": {
+                    "description": "Test model description",
+                    "properties": {
+                        "b": {
+                            "description": "param b test",
+                            "type": "integer",
+                        }
+                    },
+                    "required": ["b"],
+                    "type": "object",
+                }
+            },
+            "allOf": [{"$ref": "#/$defs/TestModel"}],
+            "description": "return test",
+        },
+    }
+    jsonschema.Draft202012Validator.check_schema(schema)
+    # Call function and test output
+    result: TestModel = test_func(a=1)
+    jsonschema.validate(instance=result.model_dump(), schema=schema[RETURNS_KEY])
