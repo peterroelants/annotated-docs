@@ -14,7 +14,7 @@ The main function is `annotated_docs.json_schema.as_json_schema` which takes a f
 ## Installation
 Directly from this GitHub repo using pip:
 ```bash
-pip install "annotated_docs @ git+https://git@github.com/peterroelants/annotated-docs.git@v0.0.3"
+pip install "annotated_docs @ git+https://git@github.com/peterroelants/annotated-docs.git@v0.0.4"
 ```
 
 
@@ -99,9 +99,9 @@ Resulting in:
 
 And we can call
 ```python
-from annotated_docs import call
+from annotated_docs import call_with_json
 
-current_weather = call(get_current_weather, function_args_from_llm)
+current_weather = call_with_json(get_current_weather, function_args_from_llm)
 ```
 
 See [notebooks/examples/test_function_calling.ipynb](notebooks/examples/test_function_calling.ipynb) for a full example.

@@ -8,4 +8,4 @@ cd ${TEST_DIR}
 
 # Run tests
 echo "Run Pytest for '${TEST_DIR}'"
-pytest -o log_cli=false ${TEST_DIR}
+pytest -o log_cli=false -vv ${TEST_DIR}

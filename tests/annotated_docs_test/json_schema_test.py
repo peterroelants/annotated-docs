@@ -4,7 +4,6 @@ from typing import Annotated as A
 import jsonschema
 from annotated_docs import as_json_schema
 from annotated_docs import doc as D
-from annotated_docs.json_schema import RETURNS_KEY
 from pydantic import BaseModel
 
 
@@ -15,6 +14,7 @@ def test_as_json_schema_no_annotations() -> None:
     schema = as_json_schema(test_func)
     assert schema == {
         "name": test_func.__name__,
+        "description": "",
         "parameters": {
             "properties": {},
             "type": "object",
@@ -138,7 +138,10 @@ def test_as_json_schema_default() -> None:
         "description": "Test function",
         "parameters": {
             "properties": {
-                "a": {"default": 1, "type": "integer"},
+                "a": {
+                    "default": 1,
+                    "type": "integer",
+                },
             },
             "type": "object",
         },
@@ -314,77 +317,3 @@ def test_as_json_schema_pydantic() -> None:
         },
     }
     jsonschema.Draft202012Validator.check_schema(schema)
-
-
-# Test returns #####################################################
-def test_as_json_schema_include_returns_simple() -> None:
-    def test_func(a: int, b: float) -> str:
-        """Test function"""
-        return "hello"
-
-    # Check schema
-    schema = as_json_schema(test_func, include_returns=True)
-    assert schema == {
-        "name": test_func.__name__,
-        "description": "Test function",
-        "parameters": {
-            "properties": {
-                "a": {"type": "integer"},
-                "b": {"type": "number"},
-            },
-            "required": ["a", "b"],
-            "type": "object",
-        },
-        "returns": {"type": "string"},
-    }
-    jsonschema.Draft202012Validator.check_schema(schema)
-    # Call function and test output
-    result = test_func(a=1, b=2.0)
-    jsonschema.validate(instance=result, schema=schema[RETURNS_KEY])
-
-
-def test_as_json_schema_include_returns_pydantic() -> None:
-    class TestModel(BaseModel):
-        """Test model description"""
-
-        b: A[int, D("param b test")]
-
-    def test_func(
-        a: int,
-    ) -> A[TestModel, D("return test")]:
-        """Test function"""
-        return TestModel(b=a * 2)
-
-    schema = as_json_schema(test_func, include_returns=True)
-    assert schema == {
-        "name": test_func.__name__,
-        "description": "Test function",
-        "parameters": {
-            "properties": {
-                "a": {"type": "integer"},
-            },
-            "required": ["a"],
-            "type": "object",
-        },
-        "returns": {
-            "$defs": {
-                "TestModel": {
-                    "description": "Test model description",
-                    "properties": {
-                        "b": {
-                            "description": "param b test",
-                            "type": "integer",
-                        }
-                    },
-                    "required": ["b"],
-                    "type": "object",
-                }
-            },
-            "allOf": [{"$ref": "#/$defs/TestModel"}],
-            "description": "return test",
-        },
-    }
-    jsonschema.Draft202012Validator.check_schema(schema)
-    # Call function and test output
-    result: TestModel = test_func(a=1)
-    jsonschema.validate(instance=result.model_dump(), schema=schema[RETURNS_KEY])
